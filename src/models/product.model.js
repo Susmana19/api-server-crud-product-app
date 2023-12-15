@@ -72,22 +72,21 @@ const productModel = {
     });
   },
 
-  // remove: (id)=> {
-  //     return new Promise((resolve, reject)=> {
-  //         db.query(
-  //             `DELETE from products WHERE id='${id}'`,
-  //             (err, result) => {
-  //             if (err) {
-  //                 return reject(err.message);
-  //             } else {
-  //                 db.query(`DELETE FROM product_images WHERE id_product='${id}' RETURNING filename`, (err, result)=> {
-  //                 if(err) return reject({message:'image can not remove'})
-  //                 return resolve(result.rows)
-  //                 })
-  //             }
-  //             });
-  //     })
-  // }
+  remove: (id) => {
+    return new Promise((resolve, reject) => {
+      db.query(
+        `DELETE from produk WHERE id_produk='${id}' RETURNING *`,
+        (err, result) => {
+          if (err) {
+            return reject(err.message);
+          } else {
+            const { id_produk, nama_produk, harga } = result.rows[0];
+            return resolve({ id_produk, nama_produk, harga });
+          }
+        }
+      );
+    });
+  },
 };
 
 module.exports = productModel;

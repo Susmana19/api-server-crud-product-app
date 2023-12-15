@@ -14,9 +14,20 @@ const productController = {
   },
 
   getById: (req, res) => {
-    return productModel.getById(req.params.id).then((result) => {
-      return res.status(200).send({ message: "succes", data: result });
-    });
+    return productModel
+      .getById(req.params.id)
+      .then((result) => {
+        return res
+          .status(200)
+          .send(
+            result
+              ? { message: "succes", data: result }
+              : { message: "product not found", data: result }
+          );
+      })
+      .catch((error) => {
+        return res.status(500).send({ message: error });
+      });
   },
 
   add: (req, res) => {
@@ -30,7 +41,9 @@ const productController = {
     return productModel
       .add(request)
       .then((result) => {
-        return res.status(201).send({ message: "succes", data: result });
+        return res
+          .status(201)
+          .send({ message: "succesfully added", data: result });
       })
       .catch((error) => {
         return res.status(500).send({ message: error });
@@ -45,7 +58,9 @@ const productController = {
     return productModel
       .update(request)
       .then((result) => {
-        return res.status(201).send({ message: "succes", data: result });
+        return res
+          .status(201)
+          .send({ message: "succesfully updated", data: result });
       })
       .catch((error) => {
         return res.status(500).send({ message: error });
@@ -55,15 +70,9 @@ const productController = {
     return productModel
       .remove(req.params.id)
       .then((result) => {
-        for (let i = 0; i < result.length; i++) {
-          unlink(`public/uploads/images/${result[i].filename}`, (err) => {
-            if (err) throw err;
-            console.log(`successfully deleted ${result[i].filename}`);
-          });
-        }
         return res
           .status(200)
-          .send({ message: "succes deleted", data: result });
+          .send({ message: "successfully deleted", data: result });
       })
       .catch((error) => {
         return res.status(500).send({ message: error });
