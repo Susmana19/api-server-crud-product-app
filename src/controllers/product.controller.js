@@ -12,7 +12,6 @@ const productController = {
         return res.status(500).send({ message: error });
       });
   },
-
   getById: (req, res) => {
     return productModel
       .getById(req.params.id)
@@ -29,7 +28,6 @@ const productController = {
         return res.status(500).send({ message: error });
       });
   },
-
   add: (req, res) => {
     const request = req.body;
 
@@ -49,7 +47,6 @@ const productController = {
         return res.status(500).send({ message: error });
       });
   },
-
   update: (req, res) => {
     const request = {
       ...req.body,

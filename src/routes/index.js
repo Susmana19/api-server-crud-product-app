@@ -15,7 +15,7 @@ router.get("/", (req, res) => {
 });
 
 //fetching data from API and insert into database
-router.get("/data", (req, res) => {
+router.get("/data", async (req, res) => {
   //declaration for getting data from API
   const now = new Date();
   const options = { timeZone: "Asia/Jakarta", day: "numeric" };
@@ -30,184 +30,227 @@ router.get("/data", (req, res) => {
   let month = now.getMonth() + 1;
   let fullYear = now.getFullYear();
   let year = fullYear.toString().slice(-2);
-  let username = `${process.env.USERNAME_PREFIX}${day}${month}${year}C${hour}`;
-  let pass = `${process.env.PASSWORD_PREFIX}-${day}-${month}-${year}`;
+  const { USERNAME_PREFIX, PASSWORD_PREFIX, API_URL } = process.env;
+  let username = `${USERNAME_PREFIX}${day}${month}${year}C${hour}`;
+  let pass = `${PASSWORD_PREFIX}-${day}-${month}-${year}`;
   let hashPassword = md5(pass);
   const data = {
     username: username,
     password: hashPassword,
   };
-  const url = process.env.API_URL;
 
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `username=${data.username}&password=${data.password}`,
-  })
-    .then((response) => response.json())
-    .then((results) => {
-      res.json({
-        message: "success getting data from API",
-        result: results.data,
-      });
-      const uniqueProductCategory = results?.data?.filter((product, index) => {
-        return (
-          results?.data?.findIndex(
-            (item) => item.kategori === product.kategori
-          ) === index
-        );
-      });
+  try {
+    let response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `username=${data.username}&password=${data.password}`,
+    });
+    let results = await response.json();
+    // console.log("results", results);
+    res.json({
+      message: "success getting data from API",
+      result: results.data,
+    });
 
-      const uniqueProductStatus = results?.data?.filter((product, index) => {
-        return (
-          results?.data?.findIndex((item) => item.status === product.status) ===
-          index
-        );
-      });
+    const uniqueProductCategory = results?.data?.filter((product, index) => {
+      return (
+        results?.data?.findIndex(
+          (item) => item.kategori === product.kategori
+        ) === index
+      );
+    });
 
-      const uniqueProductId = results?.data?.filter((product, index) => {
-        return (
-          results?.data?.findIndex(
-            (item) => item.id_produk === product.id_produk
-          ) === index
-        );
-      });
+    const uniqueProductStatus = results?.data?.filter((product, index) => {
+      return (
+        results?.data?.findIndex((item) => item.status === product.status) ===
+        index
+      );
+    });
 
-      //INSERT STATUS INTO TABLE KATEGORI
-      db.query(`SELECT nama_kategori FROM kategori`, (err, result) => {
-        if (err) {
-          return err.message;
-        }
+    const uniqueProductId = results?.data?.filter((product, index) => {
+      return (
+        results?.data?.findIndex(
+          (item) => item.id_produk === product.id_produk
+        ) === index
+      );
+    });
 
-        let arrNewCategory = [];
-        let uniqueCategory = result.rows.map((item) => {
-          return item.nama_kategori;
-        });
+    //INSERT STATUS INTO TABLE KATEGORI
 
-        for (const item of uniqueProductCategory) {
-          if (!uniqueCategory.includes(item.kategori)) {
-            arrNewCategory.push(item);
+    const insertCategory = () => {
+      return new Promise((resolve, reject) => {
+        db.query(`SELECT nama_kategori FROM kategori`, (err, result) => {
+          if (err) {
+            reject(err.message);
           }
-        }
 
-        //INSERT DATA KATEGORI FROM API TO DATABASE
-        arrNewCategory &&
-          arrNewCategory.forEach((product) => {
-            db.query(
-              `INSERT INTO kategori (nama_kategori) VALUES('${product.kategori}')`,
-              (err, result) => {
-                if (err) {
-                  return err.message;
-                } else {
-                  return console.log(
-                    `successfully insert kategori : ${product.kategori}`
-                  );
-                }
-              }
-            );
+          let arrNewCategory = [];
+          let uniqueCategory = result.rows.map((item) => {
+            return item.nama_kategori;
           });
-      });
 
-      //INSERT STATUS INTO TABLE STATUS
-      db.query(`SELECT nama_status FROM status`, (err, result) => {
-        if (err) {
-          return err.message;
-        }
-
-        let arrNewStatus = [];
-        let uniqueStatus = result.rows.map((item) => {
-          return item.nama_status;
-        });
-
-        for (const item of uniqueProductStatus) {
-          if (!uniqueStatus.includes(item.status)) {
-            arrNewStatus.push(item);
+          for (const item of uniqueProductCategory) {
+            if (!uniqueCategory.includes(item.kategori)) {
+              arrNewCategory.push(item);
+            }
           }
-        }
 
-        //INSERT DATA KATEGORI AND STATUS FROM API TO DATABASE
-        arrNewStatus &&
-          arrNewStatus.forEach((product) => {
-            db.query(
-              `INSERT INTO status (nama_status) VALUES('${product.status}')`,
-              (err, result) => {
-                if (err) {
-                  return err.message;
-                } else {
-                  return console.log(
-                    `successfully insert status : ${product.status}`
-                  );
+          //INSERT DATA KATEGORI FROM API TO DATABASE
+          arrNewCategory &&
+            arrNewCategory.forEach((product, index) => {
+              db.query(
+                `INSERT INTO kategori (nama_kategori) VALUES('${product.kategori}')`,
+                (err, result) => {
+                  if (err) {
+                    reject(err.message);
+                  } else {
+                    console.log(
+                      `successfully insert kategori : ${product.kategori}`
+                    );
+                    if (arrNewCategory.length - 1 == index) {
+                      resolve(product.kategori);
+                    }
+                  }
                 }
-              }
-            );
-          });
-      });
-
-      //INSERT PRODUK INTO TABLE PRODUK
-      db.query(`SELECT id_produk FROM produk`, (err, result) => {
-        if (err) {
-          return err.message;
-        }
-
-        let arrNewIdProduk = [];
-        let uniqueIdProduk = result.rows.map((item) => {
-          return item.id_produk;
+              );
+            });
         });
-
-        for (const item of uniqueProductId) {
-          if (!uniqueIdProduk.includes(item.id_produk)) {
-            arrNewIdProduk.push(item);
-          }
-        }
-
-        //INSERT DATPRODUK INTO DATABASE
-        arrNewIdProduk &&
-          results?.data?.forEach((product) => {
-            const { id_produk, nama_produk, kategori, harga, status } = product;
-            db.query(
-              `INSERT INTO produk (id_produk, nama_produk, harga) VALUES('${id_produk}', '${nama_produk}', '${harga}')`,
-              (err, result) => {
-                if (err) {
-                  return err.message;
-                } else {
-                  return console.log(
-                    `successfully insert produk : ${id_produk}, ${nama_produk}, ${harga}`
-                  );
-                }
-              }
-            );
-          });
       });
+    };
+    console.log("INSERT CATEGORY");
+    await insertCategory();
+    console.log("================");
+    //INSERT STATUS INTO TABLE STATUS
+
+    const insertStatus = () => {
+      return new Promise((resolve, reject) => {
+        db.query(`SELECT nama_status FROM status`, (err, result) => {
+          if (err) {
+            reject(err.message);
+          }
+
+          let arrNewStatus = [];
+          let uniqueStatus = result.rows.map((item) => {
+            return item.nama_status;
+          });
+
+          for (const item of uniqueProductStatus) {
+            if (!uniqueStatus.includes(item.status)) {
+              arrNewStatus.push(item);
+            }
+          }
+
+          //INSERT DATA KATEGORI AND STATUS FROM API TO DATABASE
+          arrNewStatus &&
+            arrNewStatus.forEach(async (product, index) => {
+              db.query(
+                `INSERT INTO status (nama_status) VALUES('${product.status}')`,
+                (err, result) => {
+                  if (err) {
+                    reject(err.message);
+                  } else {
+                    console.log(
+                      `successfully insert status : ${product.status}`
+                    );
+
+                    if (arrNewStatus.length - 1 == index) {
+                      resolve(product.status);
+                    }
+                  }
+                }
+              );
+            });
+        });
+      });
+    };
+
+    await insertStatus();
+
+    //INSERT PRODUK INTO TABLE PRODUK
+    db.query(`SELECT id_produk FROM produk`, async (err, result) => {
+      if (err) {
+        return err.message;
+      }
+
+      let arrNewIdProduk = [];
+      let uniqueIdProduk = result.rows.map((item) => {
+        return item.id_produk;
+      });
+
+      for (const item of uniqueProductId) {
+        if (!uniqueIdProduk.includes(item.id_produk)) {
+          arrNewIdProduk.push(item);
+        }
+      }
 
       //INSERT id_ketagori and id_status
-      // db.query(`SELECT kategori, status FROM produk`, (err, result) => {
-      //   db.query(
-      //     `SELECT id_kategori, nama_kategori FROM kategori`,
-      //     (err, result) => {
-      //       // console.log("result dari nama_kategori", result.rows);
-      //       let categories = result.rows;
-      //       console.log(categories);
+      const getCategory = () => {
+        return new Promise((resolve, reject) => {
+          db.query(
+            "SELECT id_kategori, nama_kategori FROM kategori",
+            (error, results) => {
+              if (error) {
+                return reject(error);
+              }
+              return resolve(results.rows);
+            }
+          );
+        });
+      };
 
-      //       //   let arrCategory = categories.map((item) => {
-      //       //     return item.nama_kategori;
-      //       //   });
-      //       // console.log(arrCategory);
-      //     }
-      //   );
-      //   db.query(`SELECT id_status, nama_status FROM status`, (err, result) => {
-      //     // console.log("result dari nama_status", result.rows);
-      //     let status = result.rows;
-      //     console.log(status);
-      //     //   let arrStatus = status.map((item) => {
-      //     //     return item.nama_status;
-      //     //   });
-      //     //   console.log(arrStatus);
-      //   });
-      // });
-    })
-    .catch((err) => {
-      console.error(err.message);
+      const getStatus = () => {
+        return new Promise((resolve, reject) => {
+          db.query(
+            "SELECT id_status, nama_status FROM status",
+            (error, results) => {
+              if (error) {
+                return reject(error);
+              }
+              return resolve(results.rows);
+            }
+          );
+        });
+      };
+
+      const arrStatus = await getStatus();
+      const arrCategory = await getCategory();
+
+      console.log("arrCategory:", arrCategory);
+      // setTimeout(() => {
+      //   console.log("waiting...");
+      //   console.log("arrCategory", arrCategory);
+      // }, 3000);
+      //INSERT DATA PRODUK INTO DATABASE
+      arrNewIdProduk &&
+        results?.data?.forEach((product) => {
+          // console.log(product);
+          const { id_produk, nama_produk, harga, kategori, status } = product;
+
+          let category = arrCategory.find(
+            (element) => element.nama_kategori == kategori
+          );
+          console.log("category", category);
+
+          let stat = arrStatus.find((element) => element.nama_status == status);
+          console.log("stat", stat);
+
+          db.query(
+            `INSERT INTO produk (id_produk, nama_produk, harga, kategori_id, status_id) VALUES('${id_produk}', '${nama_produk}', '${harga}', '${category.id_kategori}', '${stat.id_status}')`,
+            (err, result) => {
+              if (err) {
+                return err.message;
+              } else {
+                return console.log(
+                  `successfully insert produk : ${id_produk}, ${nama_produk}, ${harga}`
+                );
+              }
+            }
+          );
+        });
     });
+  } catch (error) {
+    console.error(error.message);
+  }
 });
 
 //routing products
