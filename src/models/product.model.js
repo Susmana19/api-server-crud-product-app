@@ -94,16 +94,16 @@ const productModel = {
 
   remove: (id) => {
     return new Promise((resolve, reject) => {
-      db.query(`DELETE from produk WHERE id_produk='${id}'`, (err, result) => {
-        if (err) {
-          return reject(err.message);
-        } else {
-          // const { nama_produk, harga } = result?.rows[0];
-          console.log("result delete", result);
-
-          return resolve({ message: "success deleted" });
+      db.query(
+        `DELETE from produk WHERE id_produk='${id}' RETURNING *`,
+        (err, result) => {
+          if (err) {
+            return reject(err.message);
+          } else {
+            return resolve(result.rows[0]);
+          }
         }
-      });
+      );
     });
   },
 };
