@@ -6,6 +6,8 @@ const router = express.Router();
 // import internal
 const db = require("../../helper/connection");
 const productRoute = require("./product.route");
+const categoryRoute = require("./category.route");
+const statusRoute = require("./status.route");
 
 router.get("/", (req, res) => {
   res.json({
@@ -117,9 +119,9 @@ router.get("/data", async (req, res) => {
         });
       });
     };
-    console.log("INSERT CATEGORY");
+    // console.log("INSERT CATEGORY");
     await insertCategory();
-    console.log("================");
+    // console.log("================");
     //INSERT STATUS INTO TABLE STATUS
 
     const insertStatus = () => {
@@ -212,8 +214,8 @@ router.get("/data", async (req, res) => {
         });
       };
 
-      const arrStatus = await getStatus();
       const arrCategory = await getCategory();
+      const arrStatus = await getStatus();
 
       console.log("arrCategory:", arrCategory);
       // setTimeout(() => {
@@ -255,5 +257,7 @@ router.get("/data", async (req, res) => {
 
 //routing products
 router.use("/products", productRoute);
+router.use("/category", categoryRoute);
+router.use("/status", statusRoute);
 
 module.exports = router;

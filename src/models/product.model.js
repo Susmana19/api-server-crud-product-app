@@ -6,8 +6,7 @@ const productModel = {
       db.query(
         `SELECT id_produk, nama_produk, harga, nama_kategori, nama_status FROM produk
       INNER JOIN kategori ON produk.kategori_id = kategori.id_kategori
-      INNER JOIN status ON produk.status_id = status.id_status
-      ;
+      INNER JOIN status ON produk.status_id = status.id_status WHERE nama_status='bisa dijual'
       `,
         (err, result) => {
           if (err) {
@@ -41,13 +40,17 @@ const productModel = {
 
   add: ({ nama_produk, harga, kategori_id, status_id }) => {
     return new Promise((resolve, reject) => {
+      console.log("harga:", typeof harga);
+      console.log("kat_id:", typeof kategori_id);
+      console.log("sta_id:", typeof status_id);
+
       db.query(
         `INSERT INTO produk (nama_produk, harga, kategori_id, status_id) VALUES('${nama_produk}','${harga}', '${kategori_id}', '${status_id}') RETURNING id_produk`,
         (err, result) => {
           if (err) {
             return reject(err.message);
           } else {
-            let id_produk = result.rows[0].id_produk;
+            let id_produk = result?.rows[0]?.id_produk;
             return resolve({
               id_produk,
               nama_produk,
@@ -91,17 +94,16 @@ const productModel = {
 
   remove: (id) => {
     return new Promise((resolve, reject) => {
-      db.query(
-        `DELETE from produk WHERE id_produk='${id}' RETURNING *`,
-        (err, result) => {
-          if (err) {
-            return reject(err.message);
-          } else {
-            const { id_produk, nama_produk, harga } = result.rows[0];
-            return resolve({ id_produk, nama_produk, harga });
-          }
+      db.query(`DELETE from produk WHERE id_produk='${id}'`, (err, result) => {
+        if (err) {
+          return reject(err.message);
+        } else {
+          // const { nama_produk, harga } = result?.rows[0];
+          console.log("result delete", result);
+
+          return resolve({ message: "success deleted" });
         }
-      );
+      });
     });
   },
 };

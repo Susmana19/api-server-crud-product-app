@@ -31,10 +31,26 @@ const productController = {
   add: (req, res) => {
     const request = req.body;
 
-    // if (req.body.name == undefined || req.body.price == undefined  || request.file.length == 0 || req.body.category == undefined) {
-    //     return res.status(400).send({ message: "All data is Required" });
+    if (request.nama_produk == "")
+      return res
+        .status(400)
+        .send({ field: "nama_produk", message: "nama produk harus diisi" });
+    if (request.harga == "")
+      return res
+        .status(400)
+        .send({ field: "harga", message: "harga harus diisi" });
 
-    // };
+    if (request.kategori_id == "")
+      return res
+        .status(400)
+        .send({ field: "kategori", message: "kategori harus dipilih" });
+
+    if (request.status_id == "")
+      return res
+        .status(400)
+        .send({ field: "status", message: "status harus dipilih" });
+
+    // console.log(request);
 
     return productModel
       .add(request)
