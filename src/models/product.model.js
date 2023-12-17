@@ -64,7 +64,7 @@ const productModel = {
     });
   },
 
-  update: ({ id, nama_produk, harga }) => {
+  update: ({ id, nama_produk, harga, kategori_id, status_id }) => {
     return new Promise((resolve, reject) => {
       db.query(
         `SELECT * FROM produk WHERE id_produk='${id}'`,
@@ -77,12 +77,19 @@ const productModel = {
                 nama_produk || result.rows[0].nama_produk
               }', harga='${
                 harga || result.rows[0].harga
-              }' WHERE id_produk='${id}'`,
+              }', kategori_id='${kategori_id}',
+              status_id='${status_id}' WHERE id_produk='${id}'`,
               (err, result) => {
                 if (err) {
                   return reject(err.message);
                 } else {
-                  return resolve({ id, nama_produk, harga });
+                  return resolve({
+                    id,
+                    nama_produk,
+                    harga,
+                    kategori_id,
+                    status_id,
+                  });
                 }
               }
             );
