@@ -7,7 +7,6 @@ const statusModel = {
         if (err) {
           return reject(err.message);
         } else {
-          console.log(result.rows);
           return resolve(result.rows);
         }
       });

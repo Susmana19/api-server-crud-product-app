@@ -50,8 +50,6 @@ const productController = {
         .status(400)
         .send({ field: "status", message: "status harus dipilih" });
 
-    // console.log(request);
-
     return productModel
       .add(request)
       .then((result) => {

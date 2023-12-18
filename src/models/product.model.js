@@ -12,7 +12,6 @@ const productModel = {
           if (err) {
             return reject(err.message);
           } else {
-            console.log(result.rows);
             return resolve(result.rows);
           }
         }
@@ -40,10 +39,6 @@ const productModel = {
 
   add: ({ nama_produk, harga, kategori_id, status_id }) => {
     return new Promise((resolve, reject) => {
-      console.log("harga:", typeof harga);
-      console.log("kat_id:", typeof kategori_id);
-      console.log("sta_id:", typeof status_id);
-
       db.query(
         `INSERT INTO produk (nama_produk, harga, kategori_id, status_id) VALUES('${nama_produk}','${harga}', '${kategori_id}', '${status_id}') RETURNING id_produk`,
         (err, result) => {

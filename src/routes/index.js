@@ -48,7 +48,6 @@ router.get("/data", async (req, res) => {
       body: `username=${data.username}&password=${data.password}`,
     });
     let results = await response.json();
-    // console.log("results", results);
     res.json({
       message: "success getting data from API",
       result: results.data,
@@ -119,9 +118,9 @@ router.get("/data", async (req, res) => {
         });
       });
     };
-    // console.log("INSERT CATEGORY");
+    //
     await insertCategory();
-    // console.log("================");
+
     //INSERT STATUS INTO TABLE STATUS
 
     const insertStatus = () => {
@@ -217,24 +216,16 @@ router.get("/data", async (req, res) => {
       const arrCategory = await getCategory();
       const arrStatus = await getStatus();
 
-      console.log("arrCategory:", arrCategory);
-      // setTimeout(() => {
-      //   console.log("waiting...");
-      //   console.log("arrCategory", arrCategory);
-      // }, 3000);
       //INSERT DATA PRODUK INTO DATABASE
       arrNewIdProduk &&
         results?.data?.forEach((product) => {
-          // console.log(product);
           const { id_produk, nama_produk, harga, kategori, status } = product;
 
           let category = arrCategory.find(
             (element) => element.nama_kategori == kategori
           );
-          console.log("category", category);
 
           let stat = arrStatus.find((element) => element.nama_status == status);
-          console.log("stat", stat);
 
           db.query(
             `INSERT INTO produk (id_produk, nama_produk, harga, kategori_id, status_id) VALUES('${id_produk}', '${nama_produk}', '${harga}', '${category.id_kategori}', '${stat.id_status}')`,
